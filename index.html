@@ -1,0 +1,1404 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>抖音全类型解析下载</title>
+    <style>
+        :root {
+            /* Light theme (default) */
+            --bg-primary: #f2f2f7;
+            --bg-secondary: #ffffff;
+            --bg-tertiary: #e5e5ea;
+            --bg-glass: rgba(255, 255, 255, 0.75);
+            --text-primary: #1c1c1e;
+            --text-secondary: #8e8e93;
+            --text-tertiary: #aeaeb2;
+            --accent: #007aff;
+            --accent-2: #6b5bff;
+            --accent-hover: #0056b3;
+            --success: #34c759;
+            --warning: #ff9500;
+            --danger: #ff3b30;
+            --border: rgba(0,0,0,0.08);
+            --border-strong: rgba(0,0,0,0.15);
+            --shadow: 0 2px 12px rgba(0,0,0,0.08);
+            --shadow-lg: 0 8px 32px rgba(0,0,0,0.12);
+            --shadow-glow: 0 8px 24px rgba(0, 122, 255, 0.25);
+            --card-radius: 16px;
+            --pill-radius: 20px;
+            --btn-radius: 12px;
+            --progress-bg: #e5e5ea;
+            --progress-fill: #007aff;
+            --overlay: rgba(0,0,0,0.4);
+        }
+
+        html[data-theme="dark"], 
+        html:not([data-theme]) {
+            --bg-primary: #000000;
+            --bg-secondary: #1c1c1e;
+            --bg-tertiary: #2c2c2e;
+            --bg-glass: rgba(28, 28, 30, 0.72);
+            --text-primary: #ffffff;
+            --text-secondary: #8e8e93;
+            --text-tertiary: #636366;
+            --border: rgba(255,255,255,0.1);
+            --border-strong: rgba(255,255,255,0.2);
+            --shadow: 0 2px 12px rgba(0,0,0,0.3);
+            --shadow-lg: 0 8px 32px rgba(0,0,0,0.5);
+            --shadow-glow: 0 8px 24px rgba(107, 91, 255, 0.25);
+            --progress-bg: #3a3a3c;
+        }
+
+        @media (prefers-color-scheme: light) {
+            html:not([data-theme]) {
+                --bg-primary: #f2f2f7;
+                --bg-secondary: #ffffff;
+                --bg-tertiary: #e5e5ea;
+                --bg-glass: rgba(255, 255, 255, 0.75);
+                --text-primary: #1c1c1e;
+                --text-secondary: #8e8e93;
+                --text-tertiary: #aeaeb2;
+                --border: rgba(0,0,0,0.08);
+                --border-strong: rgba(0,0,0,0.15);
+                --shadow: 0 2px 12px rgba(0,0,0,0.08);
+                --shadow-lg: 0 8px 32px rgba(0,0,0,0.12);
+                --shadow-glow: 0 8px 24px rgba(0, 122, 255, 0.25);
+                --progress-bg: #e5e5ea;
+            }
+        }
+
+        html[data-theme="light"] {
+            --bg-primary: #f2f2f7;
+            --bg-secondary: #ffffff;
+            --bg-tertiary: #e5e5ea;
+            --bg-glass: rgba(255, 255, 255, 0.75);
+            --text-primary: #1c1c1e;
+            --text-secondary: #8e8e93;
+            --text-tertiary: #aeaeb2;
+            --border: rgba(0,0,0,0.08);
+            --border-strong: rgba(0,0,0,0.15);
+            --shadow: 0 2px 12px rgba(0,0,0,0.08);
+            --shadow-lg: 0 8px 32px rgba(0,0,0,0.12);
+            --shadow-glow: 0 8px 24px rgba(0, 122, 255, 0.25);
+            --progress-bg: #e5e5ea;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before,
+        body::after {
+            content: '';
+            position: fixed;
+            inset: auto;
+            width: 420px;
+            height: 420px;
+            border-radius: 50%;
+            filter: blur(60px);
+            opacity: 0.35;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        body::before {
+            top: -120px;
+            right: -120px;
+            background: radial-gradient(circle, rgba(0,122,255,0.8), rgba(107,91,255,0.2));
+        }
+
+        body::after {
+            bottom: -160px;
+            left: -140px;
+            background: radial-gradient(circle, rgba(255,149,0,0.5), rgba(255,45,85,0.15));
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 16px;
+            padding-bottom: 100px;
+        }
+
+        /* Topbar */
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            margin-bottom: 16px;
+        }
+
+        .topbar-left h1 {
+            font-size: 28px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            background: linear-gradient(120deg, var(--accent), var(--accent-2));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .topbar-left .subtitle {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+
+        .topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Theme Switcher */
+        .theme-switcher {
+            display: flex;
+            background: var(--bg-glass);
+            border-radius: var(--pill-radius);
+            padding: 3px;
+            gap: 2px;
+            border: 1px solid var(--border);
+            backdrop-filter: blur(10px);
+        }
+
+        .theme-btn {
+            padding: 6px 12px;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            font-size: 12px;
+            font-weight: 500;
+            border-radius: calc(var(--pill-radius) - 3px);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .theme-btn.active {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            box-shadow: var(--shadow);
+        }
+
+        .paste-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 14px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
+            color: white;
+            border: none;
+            border-radius: var(--pill-radius);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: var(--shadow-glow);
+        }
+
+        .paste-btn:hover {
+            transform: translateY(-1px) scale(1.02);
+            filter: brightness(1.05);
+        }
+
+        .paste-btn:active {
+            transform: scale(0.98);
+        }
+
+        /* Cards */
+        .card {
+            background: var(--bg-glass);
+            border-radius: var(--card-radius);
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            backdrop-filter: blur(10px);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .card-title {
+            font-size: 17px;
+            font-weight: 600;
+        }
+
+        /* Pills / Tags */
+        .pills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
+            font-size: 11px;
+            font-weight: 500;
+            border-radius: var(--pill-radius);
+            border: 1px solid var(--border);
+        }
+
+        .pill.success {
+            background: rgba(52, 199, 89, 0.15);
+            color: var(--success);
+        }
+
+        .pill.warning {
+            background: rgba(255, 149, 0, 0.15);
+            color: var(--warning);
+        }
+
+        .pill.danger {
+            background: rgba(255, 59, 48, 0.15);
+            color: var(--danger);
+        }
+
+        .pill.accent {
+            background: rgba(0, 122, 255, 0.15);
+            color: var(--accent);
+        }
+
+        /* Update Card */
+        .update-card {
+            background: linear-gradient(135deg, rgba(255, 149, 0, 0.1) 0%, rgba(255, 94, 58, 0.1) 100%);
+            border: 1px solid rgba(255, 149, 0, 0.3);
+            display: none;
+        }
+
+        .update-card.show {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .update-card .card-title {
+            color: var(--warning);
+        }
+
+        .update-desc {
+            color: var(--text-secondary);
+            font-size: 14px;
+            margin-bottom: 16px;
+            white-space: pre-line;
+        }
+
+        .update-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 20px;
+            background: var(--warning);
+            color: white;
+            border: none;
+            border-radius: var(--btn-radius);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+        .update-btn:hover {
+            filter: brightness(1.1);
+            transform: scale(1.02);
+        }
+
+        /* Input Card */
+        .input-textarea {
+            width: 100%;
+            min-height: 120px;
+            padding: 14px;
+            background: var(--bg-tertiary);
+            border: 2px solid transparent;
+            border-radius: var(--btn-radius);
+            color: var(--text-primary);
+            font-size: 15px;
+            font-family: inherit;
+            resize: vertical;
+            transition: all 0.2s ease;
+            box-shadow: inset 0 0 0 1px var(--border);
+        }
+
+        .input-textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+            background: var(--bg-secondary);
+            box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.15);
+        }
+
+        .input-textarea::placeholder {
+            color: var(--text-tertiary);
+        }
+
+        .input-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 16px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 14px 20px;
+            border: none;
+            border-radius: var(--btn-radius);
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
+            color: white;
+            box-shadow: var(--shadow-glow);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            filter: brightness(1.05);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: var(--border);
+        }
+
+        .shortcut-hint {
+            text-align: center;
+            color: var(--text-tertiary);
+            font-size: 12px;
+            margin-top: 12px;
+        }
+
+        .shortcut-hint kbd {
+            padding: 2px 6px;
+            background: var(--bg-tertiary);
+            border-radius: 4px;
+            font-family: inherit;
+            font-size: 11px;
+        }
+
+        /* Status Bar */
+        .status-bar {
+            margin-top: 16px;
+            padding: 12px 16px;
+            background: var(--bg-tertiary);
+            border-radius: var(--btn-radius);
+            font-size: 13px;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-bar.loading {
+            color: var(--accent);
+        }
+
+        .status-bar.success {
+            background: rgba(52, 199, 89, 0.1);
+            color: var(--success);
+        }
+
+        .status-bar.error {
+            background: rgba(255, 59, 48, 0.1);
+            color: var(--danger);
+        }
+
+        .spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid var(--accent);
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Result Card */
+        .result-placeholder {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-tertiary);
+        }
+
+        .result-placeholder svg {
+            width: 48px;
+            height: 48px;
+            margin-bottom: 12px;
+            opacity: 0.5;
+        }
+
+        .result-header {
+            margin-bottom: 20px;
+        }
+
+        .result-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            word-break: break-word;
+        }
+
+        .result-subtitle {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        /* Download Items */
+        .download-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .download-item {
+            background: linear-gradient(135deg, rgba(255,255,255,0.04), rgba(0,0,0,0.02)), var(--bg-tertiary);
+            border-radius: var(--btn-radius);
+            padding: 16px;
+            transition: all 0.2s ease;
+            border: 1px solid var(--border);
+        }
+
+        .download-item:hover {
+            transform: translateY(-1px);
+            border-color: var(--border-strong);
+        }
+
+        .download-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 8px;
+        }
+
+        .download-item-info h4 {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .download-item-info p {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .download-item-size {
+            font-size: 11px;
+            padding: 3px 8px;
+            background: var(--bg-secondary);
+            border-radius: var(--pill-radius);
+            color: var(--text-secondary);
+        }
+
+        /* Progress Bar */
+        .progress-container {
+            margin: 12px 0;
+            display: none;
+        }
+
+        .progress-container.show {
+            display: block;
+        }
+
+        .progress-bar {
+            height: 6px;
+            background: var(--progress-bg);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent), var(--accent-2));
+            border-radius: 3px;
+            width: 0%;
+            transition: width 0.1s ease;
+        }
+
+        .progress-text {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-top: 6px;
+        }
+
+        .download-item-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .download-btn {
+            flex: 1;
+            padding: 10px 16px;
+            border: none;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .download-btn.primary {
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
+            color: white;
+            box-shadow: var(--shadow-glow);
+        }
+
+        .download-btn.primary:hover {
+            background: var(--accent-hover);
+        }
+
+        .download-btn.secondary {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+
+        .download-btn.secondary:hover {
+            opacity: 0.8;
+        }
+
+        .download-btn.danger {
+            background: linear-gradient(135deg, var(--danger), #ff6b6b);
+            color: white;
+        }
+
+        .download-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* CORS Notice */
+        .cors-notice {
+            background: var(--bg-glass);
+            border-left: 3px solid var(--warning);
+            padding: 16px;
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            backdrop-filter: blur(10px);
+        }
+
+        .cors-notice strong {
+            color: var(--text-primary);
+            display: block;
+            margin-bottom: 6px;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: var(--text-tertiary);
+            font-size: 12px;
+        }
+
+        /* Responsive */
+        @media (max-width: 480px) {
+            .topbar {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+
+            .topbar-right {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .theme-switcher {
+                flex: 1;
+            }
+
+            .theme-btn {
+                flex: 1;
+                text-align: center;
+            }
+
+            .input-actions {
+                flex-direction: column;
+            }
+
+            .download-item-actions {
+                flex-direction: column;
+            }
+        }
+
+        /* Icons (inline SVG) */
+        .icon {
+            width: 16px;
+            height: 16px;
+            fill: currentColor;
+        }
+
+        /* Animation for cards appearing */
+        .download-item {
+            animation: fadeInUp 0.3s ease;
+            animation-fill-mode: both;
+        }
+
+        .download-item:nth-child(1) { animation-delay: 0.05s; }
+        .download-item:nth-child(2) { animation-delay: 0.1s; }
+        .download-item:nth-child(3) { animation-delay: 0.15s; }
+        .download-item:nth-child(4) { animation-delay: 0.2s; }
+        .download-item:nth-child(5) { animation-delay: 0.25s; }
+        .download-item:nth-child(6) { animation-delay: 0.3s; }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Topbar -->
+        <header class="topbar">
+            <div class="topbar-left">
+                <h1>抖音全类型</h1>
+                <div class="subtitle">Shortcuts 风格 · 纯前端 · 进度下载</div>
+            </div>
+            <div class="topbar-right">
+                <div class="theme-switcher">
+                    <button class="theme-btn" data-theme="auto">自动</button>
+                    <button class="theme-btn" data-theme="light">亮</button>
+                    <button class="theme-btn" data-theme="dark">暗</button>
+                </div>
+                <button class="paste-btn" id="pasteBtn">
+                    <svg class="icon" viewBox="0 0 24 24"><path d="M19 2h-4.18C14.4.84 13.3 0 12 0c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm7 18H5V4h2v3h10V4h2v16z"/></svg>
+                    粘贴
+                </button>
+            </div>
+        </header>
+
+        <!-- Update Card -->
+        <div class="card update-card" id="updateCard">
+            <div class="card-header">
+                <h3 class="card-title" id="updateTitle">🎉 发现新版本</h3>
+            </div>
+            <p class="update-desc" id="updateDesc"></p>
+            <a href="#" class="update-btn" id="updateLink" target="_blank" rel="noreferrer noopener">
+                <svg class="icon" viewBox="0 0 24 24"><path fill="currentColor" d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+                获取新版
+            </a>
+        </div>
+
+        <!-- Input Card -->
+        <div class="card" id="inputCard">
+            <div class="pills" id="infoPills">
+                <span class="pill">版本: <span id="versionPill">3</span></span>
+                <span class="pill" id="updateSourcePill">Update: 加载中...</span>
+                <span class="pill" id="networkPill">网络: 检测中...</span>
+            </div>
+            <textarea 
+                class="input-textarea" 
+                id="inputText" 
+                placeholder="粘贴抖音分享文本或链接，例如：&#10;5.32 Qss:/ 复制打开抖音...https://v.douyin.com/xxx&#10;或直接粘贴链接：https://v.douyin.com/xxx"></textarea>
+            <div class="input-actions">
+                <button class="btn btn-primary" id="parseBtn">
+                    <svg class="icon" viewBox="0 0 24 24"><path fill="currentColor" d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+                    解析
+                </button>
+                <button class="btn btn-secondary" id="clearBtn">
+                    <svg class="icon" viewBox="0 0 24 24"><path fill="currentColor" d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+                    清空
+                </button>
+            </div>
+            <div class="shortcut-hint">
+                快捷键: <kbd>Ctrl</kbd> + <kbd>Enter</kbd> 解析
+            </div>
+            <div class="status-bar" id="statusBar">
+                <span>等待输入...</span>
+            </div>
+        </div>
+
+        <!-- Result Card -->
+        <div class="card" id="resultCard">
+            <div class="card-header">
+                <h3 class="card-title">解析结果</h3>
+            </div>
+            <div id="resultContent">
+                <div class="result-placeholder">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM17 13l-5 5-5-5h3V9h4v4h3z"/>
+                    </svg>
+                    <p>未解析</p>
+                    <p style="font-size: 12px; margin-top: 4px;">粘贴链接后点击解析</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- CORS Notice -->
+        <div class="card cors-notice">
+            <strong>⚠️ 关于跨域 (CORS) 限制</strong>
+            纯前端直连第三方 API/资源可能被浏览器拦截（跨域）。若解析/下载失败但资源链接可访问，需要加反代（Nginx/Cloudflare Worker）同域转发。
+            <br><br>
+            如遇到问题，可尝试：<br>
+            1. 使用支持跨域的浏览器扩展<br>
+            2. 部署本地反代服务<br>
+            3. 点击"打开链接"在新标签页手动保存
+        </div>
+
+        <footer class="footer">
+            <p>抖音全类型解析下载 · Shortcuts 风格</p>
+            <p style="margin-top: 4px;">纯前端实现 · 无需后端</p>
+        </footer>
+    </div>
+
+    <script>
+        // ==================== 配置 ====================
+        const CONFIG = {
+            localVersion: 3,
+            updateUrl: 'http://i.rcuts.com/update/249',
+            defaultApiUrl: 'http://api.rcuts.com/Video/DouYin_All.php',
+            defaultInputHint: '请粘贴包含 http/https 的抖音分享文本'
+        };
+
+        // ==================== 全局状态 ====================
+        let appState = {
+            apiUrl: CONFIG.defaultApiUrl,
+            inputHint: CONFIG.defaultInputHint,
+            updateInfo: null,
+            parseResult: null,
+            downloadControllers: new Map() // 存储下载的 AbortController
+        };
+
+        // ==================== DOM 元素 ====================
+        const $ = (sel) => document.querySelector(sel);
+        const $$ = (sel) => document.querySelectorAll(sel);
+
+        const elements = {
+            updateCard: $('#updateCard'),
+            updateTitle: $('#updateTitle'),
+            updateDesc: $('#updateDesc'),
+            updateLink: $('#updateLink'),
+            inputText: $('#inputText'),
+            parseBtn: $('#parseBtn'),
+            clearBtn: $('#clearBtn'),
+            pasteBtn: $('#pasteBtn'),
+            statusBar: $('#statusBar'),
+            resultContent: $('#resultContent'),
+            versionPill: $('#versionPill'),
+            updateSourcePill: $('#updateSourcePill'),
+            networkPill: $('#networkPill'),
+            themeBtns: $$('.theme-btn')
+        };
+
+        // ==================== 工具函数 ====================
+        
+        // 从文本中提取第一个 URL
+        function extractUrl(text) {
+            const match = text.match(/https?:\/\/[^\s]+/);
+            return match ? match[0] : null;
+        }
+
+        // 格式化文件大小
+        function formatSize(bytes) {
+            if (bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        // 清理文件名
+        function sanitizeFilename(name, ext) {
+            // 替换非法字符
+            let clean = name.replace(/[\\/:*?"<>|]/g, '_');
+            // 限制长度
+            if (clean.length > 120) {
+                clean = clean.substring(0, 120);
+            }
+            // 确保有内容
+            if (!clean.trim()) {
+                clean = 'douyin_download';
+            }
+            return `${clean}.${ext}`;
+        }
+
+        // 设置状态栏
+        function setStatus(message, type = 'normal') {
+            elements.statusBar.className = 'status-bar';
+            if (type === 'loading') {
+                elements.statusBar.classList.add('loading');
+                elements.statusBar.innerHTML = `<div class="spinner"></div><span>${message}</span>`;
+            } else if (type === 'success') {
+                elements.statusBar.classList.add('success');
+                elements.statusBar.innerHTML = `<span>✓ ${message}</span>`;
+            } else if (type === 'error') {
+                elements.statusBar.classList.add('error');
+                elements.statusBar.innerHTML = `<span>✕ ${message}</span>`;
+            } else {
+                elements.statusBar.innerHTML = `<span>${message}</span>`;
+            }
+        }
+
+        // ==================== 主题管理 ====================
+        
+        function initTheme() {
+            const saved = localStorage.getItem('theme');
+            if (saved === 'light' || saved === 'dark') {
+                document.documentElement.setAttribute('data-theme', saved);
+                updateThemeButtons(saved);
+            } else {
+                // 自动模式
+                document.documentElement.removeAttribute('data-theme');
+                updateThemeButtons('auto');
+            }
+        }
+
+        function updateThemeButtons(active) {
+            elements.themeBtns.forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.theme === active);
+            });
+        }
+
+        function setTheme(theme) {
+            if (theme === 'auto') {
+                document.documentElement.removeAttribute('data-theme');
+                localStorage.removeItem('theme');
+            } else {
+                document.documentElement.setAttribute('data-theme', theme);
+                localStorage.setItem('theme', theme);
+            }
+            updateThemeButtons(theme);
+        }
+
+        // ==================== 更新检查 ====================
+        
+        async function checkUpdate() {
+            const startTime = Date.now();
+            elements.updateSourcePill.textContent = 'Update: 检查中...';
+            elements.networkPill.innerHTML = '网络: <span style="color:var(--warning)">检测中...</span>';
+
+            try {
+                const response = await fetch(CONFIG.updateUrl);
+                const elapsed = Date.now() - startTime;
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                const data = await response.json();
+                appState.updateInfo = data;
+
+                // 更新 API URL 和提示文案
+                if (data.api) {
+                    appState.apiUrl = data.api;
+                }
+                if (data.input) {
+                    appState.inputHint = data.input;
+                }
+
+                // 显示网络状态
+                elements.networkPill.innerHTML = `网络: <span style="color:var(--success)">${elapsed}ms</span>`;
+                elements.updateSourcePill.textContent = 'Update: OK';
+
+                // 检查版本
+                const remoteVersion = Number(data.version);
+                if (remoteVersion > CONFIG.localVersion) {
+                    showUpdateCard(data);
+                }
+
+            } catch (error) {
+                console.error('Update check failed:', error);
+                elements.networkPill.innerHTML = `网络: <span style="color:var(--danger)">ERR</span>`;
+                elements.updateSourcePill.textContent = 'Update: 失败';
+            }
+        }
+
+        function showUpdateCard(data) {
+            elements.updateTitle.textContent = data.newtitle || '🎉 发现新版本';
+            elements.updateDesc.textContent = data.newdesc || '有新版本可用，建议更新以获得最佳体验。';
+            elements.updateLink.href = data.new || '#';
+            elements.updateCard.classList.add('show');
+        }
+
+        // ==================== 解析功能 ====================
+        
+        async function parseLink() {
+            const text = elements.inputText.value.trim();
+            if (!text) {
+                setStatus('请输入抖音分享文本或链接', 'error');
+                return;
+            }
+
+            const url = extractUrl(text);
+            if (!url) {
+                setStatus(`未检测到链接：${appState.inputHint}`, 'error');
+                return;
+            }
+
+            setStatus(`解析中... ${url}`, 'loading');
+            elements.parseBtn.disabled = true;
+
+            try {
+                const formData = new FormData();
+                formData.append('url', url);
+                formData.append('token', '');
+                formData.append('clipboard', '');
+
+                const response = await fetch(appState.apiUrl, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                const result = await response.json();
+
+                if (Number(result.code) === 0) {
+                    appState.parseResult = result;
+                    renderResult(result);
+                    setStatus('解析成功', 'success');
+                } else {
+                    setStatus(`解析失败：${result.msg || '未知错误'}`, 'error');
+                    showPlaceholder();
+                }
+
+            } catch (error) {
+                console.error('Parse error:', error);
+                setStatus('请求失败：可能是网络或跨域（CORS）限制', 'error');
+                showPlaceholder();
+            } finally {
+                elements.parseBtn.disabled = false;
+            }
+        }
+
+        function showPlaceholder() {
+            elements.resultContent.innerHTML = `
+                <div class="result-placeholder">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM17 13l-5 5-5-5h3V9h4v4h3z"/>
+                    </svg>
+                    <p>未解析</p>
+                    <p style="font-size: 12px; margin-top: 4px;">粘贴链接后点击解析</p>
+                </div>
+            `;
+        }
+
+        // ==================== 结果渲染 ====================
+        
+        function renderResult(result) {
+            const videoName = result.video_name || 'douyin';
+            const nickname = result.nickname || 'author';
+
+            // 构建下载项列表
+            const items = [];
+
+            if (result.video_url) {
+                items.push({
+                    id: 'video',
+                    title: '视频（无水印）',
+                    desc: '保存为 .mp4',
+                    url: result.video_url,
+                    filename: sanitizeFilename(videoName, 'mp4'),
+                    ext: 'mp4'
+                });
+            }
+
+            if (result.sound) {
+                items.push({
+                    id: 'sound_mp3',
+                    title: '背景音乐（mp3）',
+                    desc: '保存为 .mp3',
+                    url: result.sound,
+                    filename: sanitizeFilename(`${videoName}_music`, 'mp3'),
+                    ext: 'mp3'
+                });
+                items.push({
+                    id: 'sound_m4a',
+                    title: '背景音乐（m4a）',
+                    desc: '保存为 .m4a',
+                    url: result.sound,
+                    filename: sanitizeFilename(`${videoName}_music`, 'm4a'),
+                    ext: 'm4a'
+                });
+            }
+
+            if (result.cover) {
+                items.push({
+                    id: 'cover',
+                    title: '视频封面',
+                    desc: '保存为 .jpg',
+                    url: result.cover,
+                    filename: sanitizeFilename(`${videoName}_cover`, 'jpg'),
+                    ext: 'jpg'
+                });
+            }
+
+            if (result.sound_cover) {
+                items.push({
+                    id: 'sound_cover',
+                    title: '音乐封面',
+                    desc: '保存为 .jpg',
+                    url: result.sound_cover,
+                    filename: sanitizeFilename(`${videoName}_music_cover`, 'jpg'),
+                    ext: 'jpg'
+                });
+            }
+
+            if (result.avatar) {
+                items.push({
+                    id: 'avatar',
+                    title: '作者头像',
+                    desc: '保存为 .jpg',
+                    url: result.avatar,
+                    filename: sanitizeFilename(`${nickname}_avatar`, 'jpg'),
+                    ext: 'jpg'
+                });
+            }
+
+            // 渲染 HTML
+            let html = `
+                <div class="result-header">
+                    <h4 class="result-title">${escapeHtml(videoName)}</h4>
+                    <p class="result-subtitle">@ ${escapeHtml(nickname)}</p>
+                    <div class="pills" style="margin-top: 12px;">
+                        <span class="pill accent">作者: ${escapeHtml(nickname)}</span>
+                        <span class="pill success">资源: ${items.length}项</span>
+                        <span class="pill success">OK</span>
+                    </div>
+                </div>
+                <div class="download-list">
+            `;
+
+            items.forEach(item => {
+                html += renderDownloadItem(item);
+            });
+
+            html += '</div>';
+            elements.resultContent.innerHTML = html;
+
+            // 绑定事件
+            items.forEach(item => {
+                bindDownloadEvents(item);
+            });
+        }
+
+        function renderDownloadItem(item) {
+            return `
+                <div class="download-item" data-id="${item.id}">
+                    <div class="download-item-header">
+                        <div class="download-item-info">
+                            <h4>${item.title}</h4>
+                            <p>${item.desc}</p>
+                        </div>
+                        <span class="download-item-size" data-size-${item.id}>获取中...</span>
+                    </div>
+                    <div class="progress-container" data-progress-${item.id}>
+                        <div class="progress-bar">
+                            <div class="progress-fill" data-fill-${item.id}></div>
+                        </div>
+                        <div class="progress-text">
+                            <span data-downloaded-${item.id}>0 B</span>
+                            <span data-percent-${item.id}>0%</span>
+                        </div>
+                    </div>
+                    <div class="download-item-actions">
+                        <button class="download-btn secondary" data-open-${item.id}>
+                            <svg class="icon" viewBox="0 0 24 24"><path fill="currentColor" d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/></svg>
+                            打开链接
+                        </button>
+                        <button class="download-btn primary" data-download-${item.id}>
+                            <svg class="icon" viewBox="0 0 24 24"><path fill="currentColor" d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+                            下载
+                        </button>
+                        <button class="download-btn danger" data-cancel-${item.id} style="display:none;">
+                            <svg class="icon" viewBox="0 0 24 24"><path fill="currentColor" d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+                            取消
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function bindDownloadEvents(item) {
+            const openBtn = $(`[data-open-${item.id}]`);
+            const downloadBtn = $(`[data-download-${item.id}]`);
+            const cancelBtn = $(`[data-cancel-${item.id}]`);
+
+            // 打开链接
+            openBtn.addEventListener('click', () => {
+                window.open(item.url, '_blank', 'noreferrer,noopener');
+            });
+
+            // 开始下载
+            downloadBtn.addEventListener('click', () => {
+                startDownload(item);
+            });
+
+            // 取消下载
+            cancelBtn.addEventListener('click', () => {
+                cancelDownload(item.id);
+            });
+
+            // 尝试获取文件大小
+            fetchFileSize(item);
+        }
+
+        async function fetchFileSize(item) {
+            const sizeEl = $(`[data-size-${item.id}]`);
+            try {
+                const response = await fetch(item.url, { method: 'HEAD' });
+                const contentLength = response.headers.get('Content-Length');
+                if (contentLength) {
+                    sizeEl.textContent = formatSize(parseInt(contentLength));
+                } else {
+                    sizeEl.textContent = 'stream';
+                }
+            } catch (e) {
+                sizeEl.textContent = 'stream';
+            }
+        }
+
+        // ==================== 下载功能 ====================
+        
+        async function startDownload(item) {
+            const downloadBtn = $(`[data-download-${item.id}]`);
+            const cancelBtn = $(`[data-cancel-${item.id}]`);
+            const progressContainer = $(`[data-progress-${item.id}]`);
+            const progressFill = $(`[data-fill-${item.id}]`);
+            const downloadedEl = $(`[data-downloaded-${item.id}]`);
+            const percentEl = $(`[data-percent-${item.id}]`);
+            const sizeEl = $(`[data-size-${item.id}]`);
+
+            // 创建 AbortController
+            const controller = new AbortController();
+            appState.downloadControllers.set(item.id, controller);
+
+            // 切换按钮状态
+            downloadBtn.style.display = 'none';
+            cancelBtn.style.display = 'flex';
+            progressContainer.classList.add('show');
+            progressFill.style.width = '0%';
+
+            try {
+                const response = await fetch(item.url, {
+                    signal: controller.signal
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                const contentLength = response.headers.get('Content-Length');
+                const totalSize = contentLength ? parseInt(contentLength) : null;
+                
+                if (totalSize) {
+                    sizeEl.textContent = formatSize(totalSize);
+                }
+
+                const reader = response.body.getReader();
+                const chunks = [];
+                let downloadedSize = 0;
+                let fakeProgress = 0;
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    
+                    if (done) break;
+
+                    chunks.push(value);
+                    downloadedSize += value.length;
+
+                    if (totalSize) {
+                        // 有 Content-Length，显示精确进度
+                        const percent = Math.round((downloadedSize / totalSize) * 100);
+                        progressFill.style.width = `${percent}%`;
+                        downloadedEl.textContent = `${formatSize(downloadedSize)} / ${formatSize(totalSize)}`;
+                        percentEl.textContent = `${percent}%`;
+                    } else {
+                        // 无 Content-Length，使用伪进度
+                        fakeProgress = Math.min(92, fakeProgress + Math.random() * 3);
+                        progressFill.style.width = `${fakeProgress}%`;
+                        downloadedEl.textContent = `${formatSize(downloadedSize)} (streaming...)`;
+                        percentEl.textContent = `${Math.round(fakeProgress)}%`;
+                    }
+                }
+
+                // 完成下载
+                progressFill.style.width = '100%';
+                percentEl.textContent = '100%';
+                downloadedEl.textContent = formatSize(downloadedSize);
+
+                // 创建 Blob 并下载
+                const blob = new Blob(chunks);
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = item.filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+
+                // 显示完成状态
+                percentEl.textContent = '✓ 完成';
+
+            } catch (error) {
+                if (error.name === 'AbortError') {
+                    percentEl.textContent = '已取消';
+                    progressFill.style.background = 'var(--warning)';
+                } else {
+                    console.error('Download error:', error);
+                    percentEl.textContent = `失败: ${error.message}`;
+                    progressFill.style.background = 'var(--danger)';
+                }
+            } finally {
+                // 恢复按钮状态
+                downloadBtn.style.display = 'flex';
+                cancelBtn.style.display = 'none';
+                appState.downloadControllers.delete(item.id);
+            }
+        }
+
+        function cancelDownload(itemId) {
+            const controller = appState.downloadControllers.get(itemId);
+            if (controller) {
+                controller.abort();
+            }
+        }
+
+        // ==================== 辅助函数 ====================
+        
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // ==================== 事件绑定 ====================
+        
+        function initEvents() {
+            // 主题切换
+            elements.themeBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    setTheme(btn.dataset.theme);
+                });
+            });
+
+            // 粘贴按钮
+            elements.pasteBtn.addEventListener('click', async () => {
+                try {
+                    const text = await navigator.clipboard.readText();
+                    elements.inputText.value = text;
+                    setStatus('已粘贴剪贴板内容');
+                } catch (e) {
+                    setStatus('无法访问剪贴板，请手动粘贴', 'error');
+                }
+            });
+
+            // 解析按钮
+            elements.parseBtn.addEventListener('click', parseLink);
+
+            // 清空按钮
+            elements.clearBtn.addEventListener('click', () => {
+                elements.inputText.value = '';
+                showPlaceholder();
+                setStatus('等待输入...');
+            });
+
+            // 快捷键
+            elements.inputText.addEventListener('keydown', (e) => {
+                if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                    e.preventDefault();
+                    parseLink();
+                }
+            });
+
+            // 显示版本号
+            elements.versionPill.textContent = CONFIG.localVersion;
+        }
+
+        // ==================== 初始化 ====================
+        
+        function init() {
+            initTheme();
+            initEvents();
+            checkUpdate();
+            
+            // 检测 Mac 系统更新快捷键提示
+            if (navigator.platform.includes('Mac')) {
+                $('.shortcut-hint').innerHTML = '快捷键: <kbd>⌘</kbd> + <kbd>Enter</kbd> 解析';
+            }
+        }
+
+        // 启动
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
