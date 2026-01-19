@@ -34,18 +34,40 @@ cp index.html /var/www/html/douyin/
 python -m http.server 8080
 ```
 
-### 方式三：部署到 GitHub Pages（推荐）
+### 方式三：部署到 Cloudflare（推荐）
 
-GitHub Pages 只能提供静态文件，无法直接解决 CORS。你需要配合一个反代服务（Cloudflare Worker / Vercel）：
+Cloudflare 可以同时托管前端和反代，且有免费额度：
 
-1. 将 `index.html` 部署到 GitHub Pages
-2. 部署下方的 Cloudflare Worker（或 Vercel 反代）
+1. 使用 **Cloudflare Pages** 部署前端
+2. 使用 **Cloudflare Workers** 部署反代（见下方 Worker 代码）
 3. 打开页面后，在“反代地址”输入框填入 Worker 地址并保存  
    或直接在 URL 里带参数：`?proxy=https://your-worker.example.com`
 
+#### Cloudflare Pages 部署
+
+1. 登录 Cloudflare → Pages → Create a project
+2. 选择 GitHub 仓库并部署（只需 `index.html`）
+3. 部署完成后获得 Pages 地址，例如：`https://xxx.pages.dev`
+
+#### Cloudflare Workers 部署
+
+本仓库已提供 `worker/worker.js` 和 `worker/wrangler.toml`：
+
+```bash
+cd worker
+npx wrangler deploy
+```
+
+部署完成后会得到 Worker 地址，例如：`https://douyin-proxy.yourname.workers.dev`
+将该地址填入页面“反代地址”，或直接在 URL 中附加：
+
+```
+https://xxx.pages.dev/?proxy=https://douyin-proxy.yourname.workers.dev
+```
+
 ## ⚠️ 关于跨域 (CORS) 限制
 
-由于浏览器安全策略，纯前端直接请求第三方 API 和资源可能会被拦截。如果遇到解析或下载失败，可以尝试以下方案（GitHub Pages 必须使用反代）：
+由于浏览器安全策略，纯前端直接请求第三方 API 和资源可能会被拦截。如果遇到解析或下载失败，可以尝试以下方案（Cloudflare Pages / GitHub Pages 必须使用反代）：
 
 ### 方案一：使用 CORS 浏览器扩展
 
