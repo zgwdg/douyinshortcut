@@ -34,9 +34,18 @@ cp index.html /var/www/html/douyin/
 python -m http.server 8080
 ```
 
+### 方式三：部署到 GitHub Pages（推荐）
+
+GitHub Pages 只能提供静态文件，无法直接解决 CORS。你需要配合一个反代服务（Cloudflare Worker / Vercel）：
+
+1. 将 `index.html` 部署到 GitHub Pages
+2. 部署下方的 Cloudflare Worker（或 Vercel 反代）
+3. 打开页面后，在“反代地址”输入框填入 Worker 地址并保存  
+   或直接在 URL 里带参数：`?proxy=https://your-worker.example.com`
+
 ## ⚠️ 关于跨域 (CORS) 限制
 
-由于浏览器安全策略，纯前端直接请求第三方 API 和资源可能会被拦截。如果遇到解析或下载失败，可以尝试以下方案：
+由于浏览器安全策略，纯前端直接请求第三方 API 和资源可能会被拦截。如果遇到解析或下载失败，可以尝试以下方案（GitHub Pages 必须使用反代）：
 
 ### 方案一：使用 CORS 浏览器扩展
 
@@ -84,14 +93,7 @@ server {
 }
 ```
 
-使用反代时，需修改前端代码中的 API 地址：
-
-```javascript
-// 将
-appState.apiUrl = 'http://api.rcuts.com/Video/DouYin_All.php';
-// 改为
-appState.apiUrl = '/api/parse';
-```
+使用反代时，无需改代码，只需在页面“反代地址”输入框中填写反代地址即可。
 
 ### 方案三：Cloudflare Worker
 
@@ -102,6 +104,17 @@ addEventListener('fetch', event => {
 
 async function handleRequest(request) {
     const url = new URL(request.url)
+
+    if (request.method === 'OPTIONS') {
+        return new Response('', {
+            status: 204,
+            headers: {
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Methods': 'GET, POST, HEAD, OPTIONS',
+                'Access-Control-Allow-Headers': '*'
+            }
+        })
+    }
     
     // 解析 API
     if (url.pathname === '/api/parse') {
@@ -114,6 +127,7 @@ async function handleRequest(request) {
         
         const newResponse = new Response(response.body, response)
         newResponse.headers.set('Access-Control-Allow-Origin', '*')
+        newResponse.headers.set('Access-Control-Expose-Headers', 'Content-Length')
         return newResponse
     }
     
@@ -124,7 +138,9 @@ async function handleRequest(request) {
             return new Response('Missing url parameter', { status: 400 })
         }
         
-        const response = await fetch(targetUrl)
+        const response = await fetch(targetUrl, {
+            method: request.method
+        })
         const newResponse = new Response(response.body, response)
         newResponse.headers.set('Access-Control-Allow-Origin', '*')
         newResponse.headers.set('Access-Control-Expose-Headers', 'Content-Length')

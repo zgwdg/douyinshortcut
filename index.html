@@ -367,6 +367,60 @@
             box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.15);
         }
 
+        .proxy-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            margin-top: 12px;
+        }
+
+        .proxy-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            white-space: nowrap;
+        }
+
+        .proxy-input {
+            flex: 1;
+            padding: 10px 12px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text-primary);
+            font-size: 13px;
+            transition: all 0.2s ease;
+        }
+
+        .proxy-input:focus {
+            outline: none;
+            border-color: var(--accent);
+            background: var(--bg-secondary);
+            box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.12);
+        }
+
+        .proxy-btn {
+            padding: 10px 14px;
+            border: none;
+            border-radius: 10px;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1px solid var(--border);
+            transition: all 0.2s ease;
+        }
+
+        .proxy-btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .proxy-hint {
+            font-size: 11px;
+            color: var(--text-tertiary);
+            margin-top: 6px;
+        }
+
         .input-textarea::placeholder {
             color: var(--text-tertiary);
         }
@@ -687,6 +741,15 @@
             .download-item-actions {
                 flex-direction: column;
             }
+
+            .proxy-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .proxy-label {
+                margin-bottom: -2px;
+            }
         }
 
         /* Icons (inline SVG) */
@@ -760,11 +823,18 @@
                 <span class="pill">版本: <span id="versionPill">3</span></span>
                 <span class="pill" id="updateSourcePill">Update: 加载中...</span>
                 <span class="pill" id="networkPill">网络: 检测中...</span>
+                <span class="pill" id="proxyPill">Proxy: Off</span>
             </div>
             <textarea 
                 class="input-textarea" 
                 id="inputText" 
                 placeholder="粘贴抖音分享文本或链接，例如：&#10;5.32 Qss:/ 复制打开抖音...https://v.douyin.com/xxx&#10;或直接粘贴链接：https://v.douyin.com/xxx"></textarea>
+            <div class="proxy-row">
+                <div class="proxy-label">反代地址</div>
+                <input class="proxy-input" id="proxyInput" placeholder="https://your-worker.example.com" />
+                <button class="proxy-btn" id="proxySaveBtn">保存</button>
+            </div>
+            <div class="proxy-hint">部署到 GitHub Pages 时建议填写 Cloudflare Worker / Vercel 反代地址</div>
             <div class="input-actions">
                 <button class="btn btn-primary" id="parseBtn">
                     <svg class="icon" viewBox="0 0 24 24"><path fill="currentColor" d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
@@ -802,11 +872,11 @@
         <!-- CORS Notice -->
         <div class="card cors-notice">
             <strong>⚠️ 关于跨域 (CORS) 限制</strong>
-            纯前端直连第三方 API/资源可能被浏览器拦截（跨域）。若解析/下载失败但资源链接可访问，需要加反代（Nginx/Cloudflare Worker）同域转发。
+            纯前端直连第三方 API/资源可能被浏览器拦截（跨域）。GitHub Pages 无法解决 CORS，必须配置反代（Cloudflare Worker / Vercel / Nginx）同域转发。
             <br><br>
             如遇到问题，可尝试：<br>
-            1. 使用支持跨域的浏览器扩展<br>
-            2. 部署本地反代服务<br>
+            1. 配置反代地址并保存（上方输入框）<br>
+            2. 使用支持跨域的浏览器扩展<br>
             3. 点击"打开链接"在新标签页手动保存
         </div>
 
@@ -822,13 +892,15 @@
             localVersion: 3,
             updateUrl: 'http://i.rcuts.com/update/249',
             defaultApiUrl: 'http://api.rcuts.com/Video/DouYin_All.php',
-            defaultInputHint: '请粘贴包含 http/https 的抖音分享文本'
+            defaultInputHint: '请粘贴包含 http/https 的抖音分享文本',
+            defaultProxyUrl: ''
         };
 
         // ==================== 全局状态 ====================
         let appState = {
             apiUrl: CONFIG.defaultApiUrl,
             inputHint: CONFIG.defaultInputHint,
+            proxyUrl: CONFIG.defaultProxyUrl,
             updateInfo: null,
             parseResult: null,
             downloadControllers: new Map() // 存储下载的 AbortController
@@ -847,11 +919,14 @@
             parseBtn: $('#parseBtn'),
             clearBtn: $('#clearBtn'),
             pasteBtn: $('#pasteBtn'),
+            proxyInput: $('#proxyInput'),
+            proxySaveBtn: $('#proxySaveBtn'),
             statusBar: $('#statusBar'),
             resultContent: $('#resultContent'),
             versionPill: $('#versionPill'),
             updateSourcePill: $('#updateSourcePill'),
             networkPill: $('#networkPill'),
+            proxyPill: $('#proxyPill'),
             themeBtns: $$('.theme-btn')
         };
 
@@ -861,6 +936,33 @@
         function extractUrl(text) {
             const match = text.match(/https?:\/\/[^\s]+/);
             return match ? match[0] : null;
+        }
+
+        function normalizeProxy(url) {
+            if (!url) return '';
+            let clean = url.trim();
+            clean = clean.replace(/\/+$/, '');
+            return clean;
+        }
+
+        function getProxyBase() {
+            return appState.proxyUrl ? appState.proxyUrl : '';
+        }
+
+        function getApiUrl() {
+            const proxyBase = getProxyBase();
+            if (proxyBase) {
+                return `${proxyBase}/api/parse`;
+            }
+            return appState.apiUrl;
+        }
+
+        function getFetchUrl(resourceUrl) {
+            const proxyBase = getProxyBase();
+            if (proxyBase) {
+                return `${proxyBase}/api/fetch?url=${encodeURIComponent(resourceUrl)}`;
+            }
+            return resourceUrl;
         }
 
         // 格式化文件大小
@@ -902,6 +1004,38 @@
             } else {
                 elements.statusBar.innerHTML = `<span>${message}</span>`;
             }
+        }
+
+        function updateProxyPill() {
+            if (appState.proxyUrl) {
+                elements.proxyPill.textContent = 'Proxy: On';
+                elements.proxyPill.classList.add('success');
+            } else {
+                elements.proxyPill.textContent = 'Proxy: Off';
+                elements.proxyPill.classList.remove('success');
+            }
+        }
+
+        function setProxyUrl(url, silent = false) {
+            appState.proxyUrl = normalizeProxy(url);
+            if (appState.proxyUrl) {
+                localStorage.setItem('proxy', appState.proxyUrl);
+            } else {
+                localStorage.removeItem('proxy');
+            }
+            updateProxyPill();
+            if (!silent) {
+                setStatus(appState.proxyUrl ? '反代地址已保存' : '已关闭反代', 'success');
+            }
+        }
+
+        function initProxyFromStorage() {
+            const params = new URLSearchParams(window.location.search);
+            const urlParam = params.get('proxy');
+            const saved = localStorage.getItem('proxy');
+            const proxy = urlParam || saved || '';
+            setProxyUrl(proxy, true);
+            elements.proxyInput.value = proxy;
         }
 
         // ==================== 主题管理 ====================
@@ -1009,7 +1143,7 @@
                 formData.append('token', '');
                 formData.append('clipboard', '');
 
-                const response = await fetch(appState.apiUrl, {
+                const response = await fetch(getApiUrl(), {
                     method: 'POST',
                     body: formData
                 });
@@ -1213,7 +1347,7 @@
         async function fetchFileSize(item) {
             const sizeEl = $(`[data-size-${item.id}]`);
             try {
-                const response = await fetch(item.url, { method: 'HEAD' });
+                const response = await fetch(getFetchUrl(item.url), { method: 'HEAD' });
                 const contentLength = response.headers.get('Content-Length');
                 if (contentLength) {
                     sizeEl.textContent = formatSize(parseInt(contentLength));
@@ -1247,7 +1381,7 @@
             progressFill.style.width = '0%';
 
             try {
-                const response = await fetch(item.url, {
+                const response = await fetch(getFetchUrl(item.url), {
                     signal: controller.signal
                 });
 
@@ -1372,6 +1506,20 @@
                 setStatus('等待输入...');
             });
 
+            // 反代保存
+            elements.proxySaveBtn.addEventListener('click', () => {
+                const value = elements.proxyInput.value.trim();
+                setProxyUrl(value);
+            });
+
+            elements.proxyInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const value = elements.proxyInput.value.trim();
+                    setProxyUrl(value);
+                }
+            });
+
             // 快捷键
             elements.inputText.addEventListener('keydown', (e) => {
                 if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
@@ -1388,6 +1536,7 @@
         
         function init() {
             initTheme();
+            initProxyFromStorage();
             initEvents();
             checkUpdate();
             
